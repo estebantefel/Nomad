@@ -1,139 +1,78 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { searchTavily } from './tavily';
 import { createServerClient } from '@/lib/supabase-server';
 import type { ExperienceCategory, ExperienceInsert } from '@/types/experience';
 
-const CATEGORY_SEARCH_TERMS: Record<ExperienceCategory, string> = {
-  outdoors: 'outdoor activities nature hiking parks Madrid',
-  mind: 'meditation yoga wellness mindfulness mental health Madrid',
-  learning: 'workshops classes lectures educational tours language exchange Madrid',
-  creative: 'art classes pottery music photography cooking crafts Madrid',
-  social: 'meetups social events networking community salsa dancing Madrid',
-  food: 'restaurants food tours tapas wine tasting markets gastronomy Madrid',
-  lifestyle: 'wellness fitness spa design fashion lifestyle Madrid',
-  sports: 'padel football cycling running events tournaments gym Madrid',
+const MADRID_NEIGHBORHOODS = [
+  'Malasaña', 'Chueca', 'La Latina', 'Lavapiés', 'Retiro', 'Salamanca',
+  'Chamberí', 'Moncloa', 'Arganzuela', 'Vallecas', 'Carabanchel', 'Usera',
+  'Tetuán', 'Hortaleza', 'Moratalaz', 'Vicálvaro', 'Barajas', 'Fuencarral',
+  'Centro', 'Sol', 'Gran Vía', 'Tribunal', 'Embajadores', 'Ópera',
+];
+
+const CATEGORY_QUERIES: Record<ExperienceCategory, string[]> = {
+  outdoors:  ['outdoor activities Madrid this week', 'nature hiking parks Madrid'],
+  mind:      ['meditation yoga wellness mindfulness Madrid', 'mental wellness events Madrid'],
+  learning:  ['workshops classes learning events Madrid', 'educational experiences Madrid'],
+  creative:  ['art pottery cooking creative workshops Madrid', 'creative classes Madrid'],
+  social:    ['social meetups events networking Madrid', 'community events Madrid this week'],
+  food:      ['food tours tapas experiences gastronomy Madrid', 'best restaurants food events Madrid'],
+  lifestyle: ['fitness wellness lifestyle events Madrid', 'spa wellness lifestyle Madrid'],
+  sports:    ['padel football running sports events Madrid', 'sports activities tournaments Madrid'],
 };
 
+function extractNeighborhood(text: string): string | undefined {
+  for (const n of MADRID_NEIGHBORHOODS) {
+    if (text.includes(n)) return n;
+  }
+  return undefined;
+}
+
+function extractPrice(text: string): string | undefined {
+  const freeMatch = /\b(free|gratis|gratuito|entrada libre)\b/i.exec(text);
+  if (freeMatch) return 'Free';
+  const euroMatch = /€\s*\d+(?:[.,]\d+)?/.exec(text);
+  if (euroMatch) return euroMatch[0].replace(/\s/, '');
+  return undefined;
+}
+
+function buildExperience(
+  result: { title: string; url: string; content: string },
+  image_url: string | undefined,
+  category: ExperienceCategory
+): ExperienceInsert {
+  const combinedText = `${result.title} ${result.content}`;
+  return {
+    title: result.title.replace(/\s*[-|].*$/, '').trim().slice(0, 120),
+    description: result.content.slice(0, 200).trim(),
+    category,
+    neighborhood: extractNeighborhood(combinedText),
+    price: extractPrice(combinedText),
+    image_url,
+    source_url: result.url,
+  };
+}
+
 export async function runCategoryAgent(category: ExperienceCategory): Promise<number> {
-  const client = new Anthropic();
   const supabase = createServerClient();
-  const today = new Date().toLocaleDateString('en-GB', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
+  const queries = CATEGORY_QUERIES[category];
+  const saved: ExperienceInsert[] = [];
 
-  const tools: Anthropic.Tool[] = [
-    {
-      name: 'search_web',
-      description: 'Search the web for current Madrid experiences and events',
-      input_schema: {
-        type: 'object' as const,
-        properties: {
-          query: { type: 'string', description: 'Search query' },
-          include_images: { type: 'boolean', description: 'Include image URLs in results' },
-        },
-        required: ['query'],
-      },
-    },
-    {
-      name: 'save_experience',
-      description: 'Save a discovered Madrid experience to the database',
-      input_schema: {
-        type: 'object' as const,
-        properties: {
-          title: { type: 'string', description: 'Action-oriented name, e.g. "Rock climbing at La Pedriza"' },
-          description: { type: 'string', description: 'One or two sentence description' },
-          location: { type: 'string', description: 'Specific address or venue name in Madrid' },
-          neighborhood: { type: 'string', description: 'Madrid neighborhood, e.g. Malasaña, La Latina' },
-          date_range: { type: 'string', description: 'When available, e.g. "Until 15 May" or "Every Saturday"' },
-          duration: { type: 'string', description: 'How long it takes, e.g. "2 h" or "Half day"' },
-          price: { type: 'string', description: 'Cost, e.g. "Free" or "€15"' },
-          image_url: { type: 'string', description: 'Direct URL to a real image of this experience' },
-          source_url: { type: 'string', description: 'URL where you found this experience' },
-        },
-        required: ['title', 'description'],
-      },
-    },
-  ];
+  for (const query of queries) {
+    try {
+      const { results, images } = await searchTavily(query, true);
+      const topResults = results.slice(0, 3);
 
-  const messages: Anthropic.MessageParam[] = [
-    {
-      role: 'user',
-      content: `Today is ${today}. Search for 4-5 real, specific ${CATEGORY_SEARCH_TERMS[category]} experiences currently available in Madrid this week. For each experience, search for a real image URL. Save each one using save_experience. Use action-oriented titles (e.g. "Visit Museo del Prado"). Only save real, bookable or visitable experiences — never invent them.`,
-    },
-  ];
-
-  let saved = 0;
-  let iterations = 0;
-
-  while (iterations < 12) {
-    iterations++;
-
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
-      system: [
-        {
-          type: 'text' as const,
-          text: 'You are a Madrid experience discovery agent. You find real, current experiences in Madrid and save them. Be specific: use real venue names, real prices, real neighborhoods. Never invent experiences.',
-          cache_control: { type: 'ephemeral' },
-        },
-      ],
-      tools,
-      messages,
-    });
-
-    messages.push({ role: 'assistant', content: response.content });
-
-    if (response.stop_reason === 'end_turn') break;
-    if (response.stop_reason !== 'tool_use') break;
-
-    const toolResults: Anthropic.ToolResultBlockParam[] = [];
-
-    for (const block of response.content) {
-      if (block.type !== 'tool_use') continue;
-
-      if (block.name === 'search_web') {
-        const input = block.input as { query: string; include_images?: boolean };
-        try {
-          const results = await searchTavily(input.query, input.include_images ?? true);
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: block.id,
-            content: JSON.stringify(results),
-          });
-        } catch (err) {
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: block.id,
-            content: `Search failed: ${(err as Error).message}`,
-            is_error: true,
-          });
-        }
+      for (let i = 0; i < topResults.length; i++) {
+        const exp = buildExperience(topResults[i], images[i], category);
+        saved.push(exp);
       }
-
-      if (block.name === 'save_experience') {
-        const input = block.input as Omit<ExperienceInsert, 'category'>;
-        const { error } = await supabase.from('experiences').insert({ ...input, category });
-        if (error) {
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: block.id,
-            content: `Save failed: ${error.message}`,
-            is_error: true,
-          });
-        } else {
-          saved++;
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: block.id,
-            content: 'Saved successfully.',
-          });
-        }
-      }
+    } catch {
+      // continue with next query
     }
-
-    messages.push({ role: 'user', content: toolResults });
   }
 
-  return saved;
+  if (saved.length === 0) return 0;
+
+  const { error } = await supabase.from('experiences').insert(saved);
+  return error ? 0 : saved.length;
 }
