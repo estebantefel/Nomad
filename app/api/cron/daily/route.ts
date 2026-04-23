@@ -9,12 +9,7 @@ const CATEGORIES: ExperienceCategory[] = [
   'social', 'food', 'lifestyle', 'sports',
 ];
 
-export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function GET() {
   const results = await Promise.allSettled(
     CATEGORIES.map(async (category) => {
       const saved = await runCategoryAgent(category);
