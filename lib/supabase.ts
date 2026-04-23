@@ -33,6 +33,17 @@ export async function getDashboardFeed(limit = 8): Promise<ExperienceDB[]> {
   return data ?? [];
 }
 
+export async function getExperienceById(id: string): Promise<ExperienceDB | null> {
+  const client = getClient();
+  if (!client) return null;
+  const { data } = await client
+    .from('experiences')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  return data;
+}
+
 export async function getExperiencesByCategory(category: string): Promise<ExperienceDB[]> {
   const client = getClient();
   if (!client) return [];

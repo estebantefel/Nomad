@@ -83,9 +83,7 @@ export default function DashboardFeed({ topPick, feed }: Props) {
           transition={{ duration: 0.6, ease, delay: 0.1 }}
         >
           <Link
-            href={topPick.source_url ?? "/experiences"}
-            target={topPick.source_url ? "_blank" : undefined}
-            rel={topPick.source_url ? "noopener noreferrer" : undefined}
+            href={`/dashboard/experience/${topPick.id}`}
             className="group block rounded-2xl overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl shadow-black/60"
           >
             <div className="relative h-72 bg-black overflow-hidden">
@@ -154,9 +152,7 @@ export default function DashboardFeed({ topPick, feed }: Props) {
                 transition={{ duration: 0.55, ease, delay: 0.2 + i * 0.07 }}
               >
                 <Link
-                  href={exp.source_url ?? "/experiences"}
-                  target={exp.source_url ? "_blank" : undefined}
-                  rel={exp.source_url ? "noopener noreferrer" : undefined}
+                  href={`/dashboard/experience/${exp.id}`}
                   className="group flex rounded-2xl overflow-hidden border border-white/[0.09] hover:border-white/25 transition-all duration-300 bg-zinc-900 shadow-lg shadow-black/30"
                 >
                   <CardImage
