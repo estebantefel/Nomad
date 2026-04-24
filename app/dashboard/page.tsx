@@ -9,7 +9,7 @@ const USER_INITIALS = "AG";
 export default async function DashboardPage() {
   const [topPick, allFeed] = await Promise.all([
     getTopPick(),
-    getDashboardFeed(9),
+    getDashboardFeed(),
   ]);
 
   const featured = topPick ?? allFeed[0] ?? null;
