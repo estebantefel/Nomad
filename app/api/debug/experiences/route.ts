@@ -25,6 +25,9 @@ export async function GET() {
 
   return NextResponse.json({
     envVarsPresent: true,
+    urlPreview: `${url.slice(0, 15)}...${url.slice(-10)}`,
+    urlLength: url.length,
+    keyLength: key.length,
     directQueryCount: data?.length ?? 0,
     directQueryError: error?.message ?? null,
     directQuerySample: data?.slice(0, 2) ?? [],
