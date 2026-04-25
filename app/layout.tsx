@@ -15,13 +15,13 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Nomad — Descubre Madrid",
+  title: "Nomad — Discover Madrid",
   description:
-    "Nomad convierte Madrid en tu juego. Nuevas experiencias cada semana, rachas con amigos y el mejor plan de la ciudad esperándote.",
+    "Nomad turns Madrid into your game. New experiences every week, streaks with friends, and the best the city has to offer.",
   openGraph: {
-    title: "Nomad — Descubre Madrid",
+    title: "Nomad — Discover Madrid",
     description:
-      "Nomad convierte Madrid en tu juego. Nuevas experiencias cada semana, rachas con amigos y el mejor plan de la ciudad esperándote.",
+      "Nomad turns Madrid into your game. New experiences every week, streaks with friends, and the best the city has to offer.",
     images: ["/og-home.png"],
   },
   alternates: {
@@ -36,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="es"
+      lang="en"
       className={`${spaceGrotesk.variable} ${dmSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

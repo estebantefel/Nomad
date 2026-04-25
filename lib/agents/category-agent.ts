@@ -80,6 +80,14 @@ function extractPrice(text: string): string | undefined {
   return undefined;
 }
 
+function extractLanguage(text: string): string {
+  const hasEnglish = /\b(in english|english[- ]speaking|english[- ]language|conducted in english|taught in english|imparted in english|bilingual|bilingüe|inglés|in english)\b/i.test(text);
+  const hasSpanish = /\b(in spanish|en español|spanish[- ]speaking|conducted in spanish|solo en español|only in spanish)\b/i.test(text);
+  if (hasEnglish && hasSpanish) return 'Spanish / English';
+  if (hasEnglish) return 'English';
+  return 'Spanish';
+}
+
 function isListArticle(title: string, url: string): boolean {
   const listPatterns = /\b(\d+\s+(best|top|ways|things|ideas|workshops|classes|options)|best .* in madrid|top .* madrid)\b/i;
   const articleDomains = ['timeout.com/madrid/things-to-do', 'theguardian.com', 'lonelyplanet.com', 'tripadvisor.com/Attractions'];
@@ -110,6 +118,7 @@ export async function runCategoryAgent(category: ExperienceCategory): Promise<nu
           category,
           neighborhood: extractNeighborhood(combinedText),
           price: extractPrice(combinedText),
+          languages: extractLanguage(combinedText),
           image_url: images[i] ?? undefined,
           source_url: r.url,
         });

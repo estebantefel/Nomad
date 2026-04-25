@@ -7,7 +7,7 @@ import { Home, Compass, Users, User, Flame } from "lucide-react";
 
 const navItems = [
   { label: "Home",    href: "/dashboard",   icon: Home    },
-  { label: "Explore", href: "/experiences", icon: Compass },
+  { label: "Explore", href: "/dashboard/explore", icon: Compass },
   { label: "Social",  href: "/social",      icon: Users   },
   { label: "Profile", href: "/profile",     icon: User    },
 ];
@@ -23,6 +23,8 @@ export default function DashboardSidebar() {
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
   return (
+    <>
+    {/* Desktop sidebar */}
     <nav className="hidden lg:flex flex-col h-screen sticky top-0 w-[260px] shrink-0 bg-[#0a0a0a] border-r border-white/[0.07] px-5 py-8">
 
       <motion.div
@@ -46,6 +48,7 @@ export default function DashboardSidebar() {
             >
               <Link
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 ${
                   active
                     ? "text-brand-green bg-brand-green/10"
@@ -90,5 +93,26 @@ export default function DashboardSidebar() {
         </div>
       </motion.div>
     </nav>
+
+    {/* Mobile bottom tab bar */}
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur border-t border-white/[0.07] flex items-stretch h-16 safe-area-pb">
+      {navItems.map((item) => {
+        const active = isActive(item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[44px] transition-colors duration-200 ${
+              active ? "text-brand-green" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <item.icon className="w-5 h-5 shrink-0" strokeWidth={1.75} />
+            <span className="text-[10px] font-medium leading-none">{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+    </>
   );
 }

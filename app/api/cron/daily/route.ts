@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { runCategoryAgent } from '@/lib/agents/category-agent';
+import { runTitleRewriteAgent } from '@/lib/agents/title-rewrite-agent';
 import type { ExperienceCategory } from '@/types/experience';
 
 export const maxDuration = 300;
@@ -23,5 +24,7 @@ export async function GET() {
       : { category: CATEGORIES[i], error: (r.reason as Error).message }
   );
 
-  return NextResponse.json({ ok: true, ran_at: new Date().toISOString(), summary });
+  const { rewritten } = await runTitleRewriteAgent();
+
+  return NextResponse.json({ ok: true, ran_at: new Date().toISOString(), summary, rewritten });
 }

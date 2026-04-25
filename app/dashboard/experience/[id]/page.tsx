@@ -1,9 +1,28 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Clock, Banknote, Calendar, Tag, Users, Gauge, ExternalLink } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Banknote, Calendar, Tag, Users, Gauge, Globe, ExternalLink } from "lucide-react";
 import { getExperienceById } from "@/lib/supabase";
 import { CATEGORY_LABELS, type ExperienceCategory } from "@/types/experience";
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> }
+): Promise<Metadata> {
+  const { id } = await params;
+  const experience = await getExperienceById(id);
+  if (!experience) return { title: "Experiencia — Nomad" };
+  return {
+    title: `${experience.title} — Nomad`,
+    description: experience.description ?? `Discover ${experience.title} in Madrid with Nomad.`,
+    robots: { index: false },
+    openGraph: {
+      title: `${experience.title} — Nomad`,
+      description: experience.description ?? `Discover ${experience.title} in Madrid with Nomad.`,
+      ...(experience.image_url ? { images: [experience.image_url] } : {}),
+    },
+  };
+}
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
   outdoors:  "linear-gradient(135deg, #14532d, #15803d)",
@@ -57,6 +76,7 @@ export default async function ExperienceDetailPage({ params }: { params: Promise
   const stats = [
     experience.location   && { icon: <MapPin className="w-3.5 h-3.5" strokeWidth={1.75} />,     label: "Location",    value: experience.location },
     experience.price      && { icon: <Banknote className="w-3.5 h-3.5" strokeWidth={1.75} />,   label: "Price",       value: experience.price },
+    experience.languages  && { icon: <Globe className="w-3.5 h-3.5" strokeWidth={1.75} />,      label: "Language",    value: experience.languages },
     experience.duration   && { icon: <Clock className="w-3.5 h-3.5" strokeWidth={1.75} />,      label: "Duration",    value: experience.duration },
     experience.date_range && { icon: <Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />,   label: "When",        value: experience.date_range },
     { icon: <Tag className="w-3.5 h-3.5" strokeWidth={1.75} />,     label: "Category",    value: CATEGORY_LABELS[experience.category] },

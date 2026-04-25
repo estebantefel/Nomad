@@ -49,7 +49,7 @@ export default function DashboardSocialPanel() {
         </div>
         <Link
           href="/social"
-          className="flex items-center gap-0.5 text-xs text-zinc-500 hover:text-brand-green transition-colors duration-200"
+          className="flex items-center gap-0.5 text-xs text-zinc-500 hover:text-brand-green transition-colors duration-200 focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-green/60 focus-visible:rounded-sm"
         >
           View all <ChevronRight className="w-3 h-3" />
         </Link>
@@ -59,6 +59,7 @@ export default function DashboardSocialPanel() {
         {friends.map((friend, i) => (
           <motion.li
             key={friend.name}
+            aria-current={friend.isMe ? "true" : undefined}
             initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 12 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.5, ease, delay: 0.1 + i * 0.08 }}
@@ -107,7 +108,7 @@ export default function DashboardSocialPanel() {
         </p>
         <Link
           href="/social"
-          className="mt-2.5 inline-flex items-center gap-1 text-brand-green text-xs font-semibold hover:text-brand-green/80 transition-colors duration-200"
+          className="mt-2.5 inline-flex items-center gap-1 text-brand-green text-xs font-semibold hover:text-brand-green/80 transition-colors duration-200 focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-green/60 focus-visible:rounded-sm"
         >
           See full leaderboard <ChevronRight className="w-3 h-3" />
         </Link>

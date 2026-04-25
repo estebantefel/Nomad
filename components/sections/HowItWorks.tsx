@@ -34,7 +34,7 @@ export default function HowItWorks() {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.5 }}
-          className="text-xs font-semibold tracking-[0.2em] uppercase text-zinc-400"
+          className="text-sm font-semibold tracking-[0.2em] uppercase text-zinc-500"
         >
           How it works
         </motion.p>
@@ -47,16 +47,31 @@ export default function HowItWorks() {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
             >
-              <div className="border-t border-zinc-200 py-10 grid grid-cols-[80px_1fr_auto] gap-8 items-center group">
-                <span className="font-[family-name:var(--font-heading)] text-sm font-semibold text-zinc-500">
-                  {step.number}
-                </span>
-                <h2 className="font-[family-name:var(--font-heading)] text-4xl font-bold text-zinc-900 leading-tight tracking-tight group-hover:text-zinc-600 transition-colors duration-300">
-                  {step.title}
-                </h2>
-                <p className="text-zinc-500 text-base leading-relaxed max-w-xs text-right">
-                  {step.description}
-                </p>
+              <div className="border-t border-zinc-200 py-8 md:py-10 group">
+                {/* Mobile: stacked layout */}
+                <div className="flex flex-col gap-3 md:hidden">
+                  <span className="font-[family-name:var(--font-heading)] text-sm font-semibold text-zinc-500">
+                    {step.number}
+                  </span>
+                  <h2 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-zinc-900 leading-tight tracking-tight">
+                    {step.title}
+                  </h2>
+                  <p className="text-zinc-500 text-base leading-relaxed">
+                    {step.description}
+                  </p>
+                </div>
+                {/* Desktop: three-column layout */}
+                <div className="hidden md:grid grid-cols-[80px_1fr_auto] gap-8 items-center">
+                  <span className="font-[family-name:var(--font-heading)] text-sm font-semibold text-zinc-500">
+                    {step.number}
+                  </span>
+                  <h2 className="font-[family-name:var(--font-heading)] text-4xl font-bold text-zinc-900 leading-tight tracking-tight group-hover:text-zinc-600 transition-colors duration-300">
+                    {step.title}
+                  </h2>
+                  <p className="text-zinc-500 text-base leading-relaxed max-w-xs text-right">
+                    {step.description}
+                  </p>
+                </div>
               </div>
             </motion.li>
           ))}

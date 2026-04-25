@@ -18,6 +18,8 @@ export interface ExperienceDB {
   date_range: string | null;
   duration: string | null;
   price: string | null;
+  languages: string | null;
+  raw_title: string | null;
   image_url: string | null;
   source_url: string | null;
   is_top_pick: boolean;
@@ -34,6 +36,7 @@ export interface ExperienceInsert {
   date_range?: string;
   duration?: string;
   price?: string;
+  languages?: string;
   image_url?: string;
   source_url?: string;
   is_top_pick?: boolean;

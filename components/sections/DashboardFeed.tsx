@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { motion, useReducedMotion, useInView } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Clock, Banknote, Star } from "lucide-react";
+import { Clock, Banknote, MapPin, Star } from "lucide-react";
 import type { ExperienceDB } from "@/types/experience";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -20,36 +20,7 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   sports:    "linear-gradient(135deg, #052e16, #065f46)",
 };
 
-function CardImage({
-  src,
-  alt,
-  className,
-  category,
-  badge,
-}: {
-  src: string | null;
-  alt: string;
-  className: string;
-  category: string;
-  badge?: React.ReactNode;
-}) {
-  if (src) {
-    return (
-      <div className={`relative overflow-hidden ${className}`}>
-        <Image src={src} alt={alt} fill className="object-cover group-hover:scale-105 transition-transform duration-500" unoptimized />
-        {badge}
-      </div>
-    );
-  }
-  return (
-    <div
-      className={`flex items-center justify-center relative overflow-hidden ${className}`}
-      style={{ background: CATEGORY_GRADIENTS[category] ?? "linear-gradient(135deg, #1c1917, #292524)" }}
-    >
-      {badge}
-    </div>
-  );
-}
+const USER_INITIALS = "TÚ"; // TODO: replace with real user initials from auth session
 
 interface Props {
   topPick: ExperienceDB | null;
@@ -68,25 +39,42 @@ export default function DashboardFeed({ topPick, feed }: Props) {
   return (
     <div ref={ref} className="flex flex-col gap-8 px-8 py-8">
 
-      <div>
-        <p className="text-zinc-500 text-sm capitalize">{today}</p>
-        <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-white mt-0.5">
-          Buenos días, Ana.
-        </h1>
-      </div>
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5, ease, delay: 0.05 }}
+        className="flex items-start justify-between"
+      >
+        <div>
+          <p className="text-zinc-500 text-sm capitalize">{today}</p>
+          <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-white mt-0.5">
+            Dashboard
+          </h1>
+        </div>
+        <Link
+          href="/profile"
+          aria-label="Go to profile"
+          className="shrink-0 mt-1 w-10 h-10 rounded-full bg-brand-green flex items-center justify-center text-sm font-bold text-white hover:bg-brand-green-deep transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] select-none shadow-lg shadow-brand-green/20"
+        >
+          {USER_INITIALS}
+        </Link>
+      </motion.div>
 
-      {/* Featured hero — top pick of the week */}
+      {/* Hero — top pick */}
       {topPick && (
         <motion.div
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease, delay: 0.1 }}
+          whileHover={shouldReduceMotion ? {} : { y: -4 }}
+          whileTap={shouldReduceMotion ? {} : { scale: 0.99 }}
         >
           <Link
             href={`/dashboard/experience/${topPick.id}`}
-            className="group block rounded-2xl overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl shadow-black/60"
+            className="group block rounded-2xl overflow-hidden border border-white/20 hover:border-white/40 transition-colors duration-300 shadow-xl shadow-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]"
           >
-            <div className="relative h-72 bg-black overflow-hidden">
+            <div className="relative h-60 overflow-hidden">
               {topPick.image_url ? (
                 <Image
                   src={topPick.image_url}
@@ -101,33 +89,32 @@ export default function DashboardFeed({ topPick, feed }: Props) {
                   style={{ background: CATEGORY_GRADIENTS[topPick.category] }}
                 />
               )}
-              <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-xs font-semibold text-white bg-brand-green flex items-center gap-1.5">
-                <Star className="w-3 h-3" strokeWidth={2} />
-                This week&apos;s pick
-              </span>
-              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 to-transparent" />
               <div className="absolute bottom-0 left-0 px-6 pb-5">
-                <span className="text-brand-green text-xs font-semibold uppercase tracking-widest">Top pick</span>
-                <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-white mt-1 leading-tight">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-white bg-brand-green/20 border border-brand-green/30 mb-2">
+                  <Star className="w-3 h-3" strokeWidth={2} />
+                  This week&apos;s pick
+                </span>
+                <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-white group-hover:text-brand-green transition-colors duration-200 leading-tight">
                   {topPick.title}
                 </h2>
                 <div className="flex gap-4 mt-2 flex-wrap">
-                  {topPick.location && (
-                    <div className="flex items-center gap-1.5 text-xs text-white/50">
-                      <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.75} />
-                      <span>{topPick.location}</span>
+                  {topPick.price && (
+                    <div className="flex items-center gap-1.5 text-xs text-white/60">
+                      <Banknote className="w-3 h-3 shrink-0" strokeWidth={1.75} />
+                      <span>{topPick.price}</span>
                     </div>
                   )}
                   {topPick.duration && (
-                    <div className="flex items-center gap-1.5 text-xs text-white/50">
+                    <div className="flex items-center gap-1.5 text-xs text-white/60">
                       <Clock className="w-3 h-3 shrink-0" strokeWidth={1.75} />
                       <span>{topPick.duration}</span>
                     </div>
                   )}
-                  {topPick.price && (
-                    <div className="flex items-center gap-1.5 text-xs text-white/50">
-                      <Banknote className="w-3 h-3 shrink-0" strokeWidth={1.75} />
-                      <span>{topPick.price}</span>
+                  {topPick.location && (
+                    <div className="flex items-center gap-1.5 text-xs text-white/60">
+                      <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.75} />
+                      <span>{topPick.location}</span>
                     </div>
                   )}
                 </div>
@@ -139,52 +126,67 @@ export default function DashboardFeed({ topPick, feed }: Props) {
 
       {/* Feed */}
       <div>
-        <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-4">Discover Madrid</p>
+        <p className="text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-4">
+          Discover Madrid
+        </p>
         {feed.length === 0 ? (
-          <p className="text-zinc-600 text-sm">Experiences loading — check back shortly.</p>
+          <p className="text-zinc-500 text-sm">Experiences loading — check back shortly.</p>
         ) : (
-          <ul className="flex flex-col gap-4">
+          <ul className="flex flex-col gap-3">
             {feed.map((exp, i) => (
               <motion.li
                 key={exp.id}
                 initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.55, ease, delay: 0.2 + i * 0.07 }}
+                whileHover={shouldReduceMotion ? {} : { y: -3 }}
+                whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
               >
                 <Link
                   href={`/dashboard/experience/${exp.id}`}
-                  className="group flex rounded-2xl overflow-hidden border border-white/[0.09] hover:border-white/25 transition-all duration-300 bg-zinc-900 shadow-lg shadow-black/30"
+                  className="group flex rounded-2xl overflow-hidden border border-white/[0.09] hover:border-white/25 transition-colors duration-300 bg-zinc-900 shadow-md shadow-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]"
                 >
-                  <CardImage
-                    src={exp.image_url}
-                    alt={exp.title}
-                    className="w-44 shrink-0 bg-zinc-800"
-                    category={exp.category}
-                  />
-                  <div className="flex flex-col justify-center px-5 py-4 min-w-0">
-                    <h3 className="font-[family-name:var(--font-heading)] text-lg font-bold text-white group-hover:text-brand-green transition-colors duration-300 leading-snug">
+                  <div className="relative w-32 sm:w-40 shrink-0 bg-zinc-800">
+                    {exp.image_url ? (
+                      <Image
+                        src={exp.image_url}
+                        alt={exp.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        unoptimized
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            CATEGORY_GRADIENTS[exp.category] ??
+                            "linear-gradient(135deg, #1c1917, #292524)",
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex flex-col justify-center px-4 py-4 min-w-0 gap-2">
+                    <h3 className="font-[family-name:var(--font-heading)] text-base font-bold text-white group-hover:text-brand-green transition-colors duration-200 leading-snug line-clamp-2">
                       {exp.title}
                     </h3>
                     {exp.description && (
-                      <p className="text-zinc-500 text-xs mt-1 line-clamp-2">{exp.description}</p>
+                      <p className="text-zinc-500 text-xs leading-relaxed line-clamp-2">
+                        {exp.description}
+                      </p>
                     )}
-                    <div className="flex flex-col gap-1.5 mt-3">
-                      {exp.location && (
-                        <div className="flex items-center gap-2 text-xs text-zinc-500">
-                          <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.75} />
-                          <span className="truncate">{exp.location}</span>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {exp.price && (
+                        <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                          <Banknote className="w-3 h-3 shrink-0" strokeWidth={1.75} />
+                          <span>{exp.price}</span>
                         </div>
                       )}
                       {exp.duration && (
-                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                        <div className="flex items-center gap-1.5 text-xs text-zinc-500">
                           <Clock className="w-3 h-3 shrink-0" strokeWidth={1.75} />
-                          <span className="truncate">{exp.duration}</span>
-                        </div>
-                      )}
-                      {exp.price && (
-                        <div className="flex items-center gap-2 text-xs text-zinc-500">
-                          <Banknote className="w-3 h-3 shrink-0" strokeWidth={1.75} />
-                          <span className="truncate">{exp.price}</span>
+                          <span>{exp.duration}</span>
                         </div>
                       )}
                     </div>
